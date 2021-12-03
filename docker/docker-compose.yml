@@ -14,7 +14,7 @@ services:
      - ./data:/data
     depends_on:
      - crawler
-    command: "--crawler-db-path /data/crawler.db --api-db-path /data/api.db"
+    command: "--crawler-db-path /data/crawler.db --api-db-path /data/api.db --f"
 
   frontend:
     build: ./web
