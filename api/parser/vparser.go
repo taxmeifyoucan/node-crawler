@@ -60,15 +60,20 @@ func ParseVersionString(input string) *ParsedInfo {
 		return nil
 	}
 
-	if strings.HasPrefix(s[1], "v") {
-		output.Version = parseVersion(s[1])
-		output.Os = parseOS(s[2])
-		output.Language = parseLanguage(s[3])
+	// Check if the length of the 's' array is at least 4 before accessing its elements
+	if len(s) >= 4 {
+		if strings.HasPrefix(s[1], "v") {
+			output.Version = parseVersion(s[1])
+			output.Os = parseOS(s[2])
+			output.Language = parseLanguage(s[3])
+		} else {
+			output.Label = s[1]
+			output.Version = parseVersion(s[2])
+			output.Os = parseOS(s[3])
+			output.Language = parseLanguage(s[4])
+		}
 	} else {
-		output.Label = s[1]
-		output.Version = parseVersion(s[2])
-		output.Os = parseOS(s[3])
-		output.Language = parseLanguage(s[4])
+		return nil
 	}
 
 	if output.Version.Error {
@@ -77,6 +82,7 @@ func ParseVersionString(input string) *ParsedInfo {
 	}
 	return &output
 }
+
 
 
 func parseLanguage(input string) LanguageInfo {
