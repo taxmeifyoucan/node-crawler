@@ -40,7 +40,6 @@ var reLanguage = regexp.MustCompile(`(?P<name>[a-zA-Z]+)?-?(?P<version>[\d+.?]+)
 func (p *ParsedInfo) String() string {
 	return fmt.Sprintf("%v (%v) %v %v", p.Name, p.Version, p.Os, p.Language)
 }
-
 func ParseVersionString(input string) *ParsedInfo {
 	var output ParsedInfo
 
@@ -56,25 +55,20 @@ func ParseVersionString(input string) *ParsedInfo {
 
 	// version string consists of four components, divided by /
 	s := strings.Split(strings.ToLower(input), "/")
-	l := len(s)
 	output.Name = strings.ToLower(s[0])
 	if output.Name == "" {
 		return nil
 	}
 
-	if l == 5 || l == 7 {
+	if strings.HasPrefix(s[1], "v") {
+		output.Version = parseVersion(s[1])
+		output.Os = parseOS(s[2])
+		output.Language = parseLanguage(s[3])
+	} else {
 		output.Label = s[1]
 		output.Version = parseVersion(s[2])
 		output.Os = parseOS(s[3])
 		output.Language = parseLanguage(s[4])
-	} else if l == 4 {
-		output.Version = parseVersion(s[1])
-		output.Os = parseOS(s[2])
-		output.Language = parseLanguage(s[3])
-	} else if (l == 1 || l == 0) && (output.Name == "tmp" || output.Name == "eth2") {
-		// These are usually "tmp" nodes that cannot be parsed.
-	} else {
-		fmt.Printf("Parser Error: Invalid length of '%d' for input: '%s'\n", l, input)
 	}
 
 	if output.Version.Error {
@@ -83,6 +77,7 @@ func ParseVersionString(input string) *ParsedInfo {
 	}
 	return &output
 }
+
 
 func parseLanguage(input string) LanguageInfo {
 	var languageInfo LanguageInfo
@@ -160,14 +155,13 @@ func parseVersionNumber(input string) (int, int, int) {
 }
 
 func parseOS(input string) OSInfo {
-	split := strings.Split(input, "-")
+	reOSArch := regexp.MustCompile(`(?P<os>[a-zA-Z]+)(?:-(?P<arch>[a-zA-Z0-9_]+))?`)
+	matches := reOSArch.FindStringSubmatch(input)
+
 	var osInfo OSInfo
-	switch len(split) {
-	case 2:
-		osInfo.Architecture = split[1]
-		fallthrough
-	case 1:
-		osInfo.Os = split[0]
+	if len(matches) > 0 {
+		osInfo.Os = matches[reOSArch.SubexpIndex("os")]
+		osInfo.Architecture = matches[reOSArch.SubexpIndex("arch")]
 	}
 	return osInfo
 }
